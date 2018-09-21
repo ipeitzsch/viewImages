@@ -6,7 +6,7 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="150dp"
+        android:layout_width="match_parent"
         android:layout_height="150dp"
         android:scaleType="centerCrop">
     </ImageView>
@@ -27,5 +27,15 @@
             android:textColor="#FFFFFF" />
 
     </RelativeLayout>
+
+    <ToggleButton
+        android:id="@+id/rButton"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:onClick="rButtonOnClick"
+        android:textOn=" "
+        android:textOff=" "/>
+
+
 
 </RelativeLayout>

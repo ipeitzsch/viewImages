@@ -1,14 +1,17 @@
 package com.example.irpei.myapplication;
 
-import android.Manifest;
+
 import android.app.Activity;
-import android.content.pm.PackageManager;
+
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
+
 import android.view.View;
 import android.widget.AdapterView;
+
 import android.widget.GridView;
+import android.widget.ToggleButton;
+
 
 import java.io.File;
 import java.io.FileFilter;
@@ -18,14 +21,14 @@ import java.util.List;
 public class MainActivity extends Activity implements AdapterView.OnItemClickListener {
 
     List<GridViewItem> gridItems;
-
+    List<File> toLoad;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-       
-        setGridAdapter("/sdcard/DCIM/raspberry");
+
+        setGridAdapter("/storage/self/primary/DCIM/Camera");
     }
 
 
@@ -55,24 +58,28 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
      */
     private List<GridViewItem> createGridItems(String directoryPath) {
         List<GridViewItem> items = new ArrayList<GridViewItem>();
-
+        toLoad = new ArrayList<File>();
         // List all the items within the folder.
         File[] files = new File(directoryPath).listFiles();
 
-        for (File file : files) {
-
+        for (int i = 0; i < files.length; i++) {
+            final File file = files[i];
             // Add the directories containing images or sub-directories
             if (file.isDirectory()
                     && file.listFiles(new ImageFileFilter()).length > 0) {
-
-                items.add(new GridViewItem(file.getAbsolutePath(), true, null));
+                items.add(new GridViewItem(file.getAbsolutePath(), true, null, null));
             }
             // Add the images
             else {
                 Bitmap image = BitmapHelper.decodeBitmapFromFile(file.getAbsolutePath(),
                         50,
                         50);
-                items.add(new GridViewItem(file.getAbsolutePath(), false, image));
+                // Radio button for each grid item
+                // Selected items are added to the files to move
+                // Deselected items are removed
+                ToggleButton rButton = (ToggleButton) findViewById(R.id.rButton);
+
+                items.add(new GridViewItem(file.getAbsolutePath(), false, image, rButton));
             }
         }
 
@@ -123,4 +130,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
         }
     }
 
+    public void rButtonOnClick(View view) {
+
+    }
 }

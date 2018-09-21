@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import java.io.File;
@@ -61,6 +62,8 @@ public class MyGridAdapter extends BaseAdapter {
 
         ImageView imageView = (ImageView) convertView.findViewById(R.id.imageView);
         Bitmap image = items.get(position).getImage();
+
+
 
         if (image != null){
             imageView.setImageBitmap(image);
