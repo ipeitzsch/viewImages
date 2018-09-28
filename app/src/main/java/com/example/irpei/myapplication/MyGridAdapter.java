@@ -57,8 +57,6 @@ public class MyGridAdapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.grid_item, null);
         }
 
-        TextView text = (TextView) convertView.findViewById(R.id.textView);
-        text.setText(getDate(items.get(position))); // Photo Date
 
         ImageView imageView = (ImageView) convertView.findViewById(R.id.imageView);
         Bitmap image = items.get(position).getImage();

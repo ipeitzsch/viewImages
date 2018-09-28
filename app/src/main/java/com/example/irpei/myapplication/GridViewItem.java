@@ -13,14 +13,14 @@ public class GridViewItem {
     private String path;
     private boolean isDirectory;
     private Bitmap image;
-    private ToggleButton rButton;
+    private boolean isSelected;
 
 
-    public GridViewItem(String path, boolean isDirectory, Bitmap image, ToggleButton rButton) {
+    public GridViewItem(String path, boolean isDirectory, Bitmap image, boolean isSelected) {
         this.path = path;
         this.isDirectory = isDirectory;
         this.image = image;
-        this.rButton = rButton;
+        this.isSelected = isSelected;
     }
 
 
@@ -38,8 +38,10 @@ public class GridViewItem {
         return image;
     }
 
-    public ToggleButton getButton()
+    public boolean isSelected() {return isSelected; }
+
+    public void setSelected(boolean s)
     {
-        return rButton;
+        isSelected = s;
     }
 }

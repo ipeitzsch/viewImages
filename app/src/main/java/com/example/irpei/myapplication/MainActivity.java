@@ -4,34 +4,85 @@ package com.example.irpei.myapplication;
 import android.app.Activity;
 
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.media.MediaScannerConnection;
 import android.os.Bundle;
 
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 
+import android.widget.Button;
 import android.widget.GridView;
-import android.widget.ToggleButton;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity implements AdapterView.OnItemClickListener {
 
     List<GridViewItem> gridItems;
-    List<File> toLoad;
-
+    List<String> toLoad;
+    MyGridAdapter adp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        Button but = (Button)findViewById(R.id.button);
 
+
+        setContentView(R.layout.activity_main);
+        toLoad = new ArrayList<>();
         setGridAdapter("/storage/self/primary/DCIM/Camera");
     }
+    public void buttonClick(View view)
+    {
 
+        for(String s: toLoad)
+        {
+            Bitmap image = BitmapHelper.decodeBitmapFromFile(s,
+                    50,
+                    50);
+            File f = new File(s);
+            FileOutputStream out = null;
+            try{
 
+                out = new FileOutputStream("/storage/self/primary/DCIM/Test" + f.getName());
+                image.compress(Bitmap.CompressFormat.PNG, 100, out);
+                MediaScannerConnection.scanFile(this, new String[]{"/storage/self/primary/DCIM/Test" + f.getName()}, null, null);
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+            finally {
+                if(out != null)
+                {
+                    try {
+                        out.close();
+                        for(int i = 0; i < gridItems.size(); i++)
+                        {
+                            RelativeLayout v = (RelativeLayout)(adp.getView(i, null, null));
+                            ViewGroup a = (ViewGroup)v;
+                            ImageView img = (ImageView)(a.getChildAt(0));
+                            img.setColorFilter(null);
+                        }
+                        System.out.println("Done");
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+    }
     /**
      * This will create our GridViewItems and set the adapter
      *
@@ -41,11 +92,11 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
     private void setGridAdapter(String path) {
         // Create a new grid adapter
         gridItems = createGridItems(path);
-        MyGridAdapter adapter = new MyGridAdapter(this, gridItems);
+         adp = new MyGridAdapter(this, gridItems);
 
         // Set the grid adapter
         GridView gridView = (GridView) findViewById(R.id.gridView);
-        gridView.setAdapter(adapter);
+        gridView.setAdapter(adp);
 
         // Set the onClickListener
         gridView.setOnItemClickListener(this);
@@ -58,7 +109,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
      */
     private List<GridViewItem> createGridItems(String directoryPath) {
         List<GridViewItem> items = new ArrayList<GridViewItem>();
-        toLoad = new ArrayList<File>();
+
         // List all the items within the folder.
         File[] files = new File(directoryPath).listFiles();
 
@@ -67,19 +118,15 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
             // Add the directories containing images or sub-directories
             if (file.isDirectory()
                     && file.listFiles(new ImageFileFilter()).length > 0) {
-                items.add(new GridViewItem(file.getAbsolutePath(), true, null, null));
+                items.add(new GridViewItem(file.getAbsolutePath(), true, null, false));
             }
             // Add the images
             else {
                 Bitmap image = BitmapHelper.decodeBitmapFromFile(file.getAbsolutePath(),
                         50,
                         50);
-                // Radio button for each grid item
-                // Selected items are added to the files to move
-                // Deselected items are removed
-                ToggleButton rButton = (ToggleButton) findViewById(R.id.rButton);
 
-                items.add(new GridViewItem(file.getAbsolutePath(), false, image, rButton));
+                items.add(new GridViewItem(file.getAbsolutePath(), false, image, false));
             }
         }
 
@@ -108,7 +155,29 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
             setGridAdapter(gridItems.get(position).getPath());
         }
         else {
-            // Display the image
+            GridViewItem g = gridItems.get(position);
+            if(g.isSelected())
+            {
+                g.setSelected(false);
+                ViewGroup a = (ViewGroup)view;
+                ImageView i = (ImageView)(a.getChildAt(0));
+                i.setColorFilter(null);
+                if(toLoad.contains(g.getPath()))
+                {
+                    toLoad.remove(g.getPath());
+                }
+            }
+            else
+            {
+                g.setSelected(true);
+                toLoad.add(g.getPath());
+                System.out.println(g.getPath());
+                ViewGroup a = (ViewGroup)view;
+                ImageView i = (ImageView)(a.getChildAt(0));
+                i.setColorFilter(Color.argb(150,200,200,200));
+
+
+            }
         }
 
     }
@@ -128,9 +197,5 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
             }
             return false;
         }
-    }
-
-    public void rButtonOnClick(View view) {
-
     }
 }
