@@ -2,6 +2,7 @@ package com.example.irpei.myapplication;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -65,6 +66,15 @@ public class MyGridAdapter extends BaseAdapter {
 
         if (image != null){
             imageView.setImageBitmap(image);
+
+            if(items.get(position).isSelected())
+            {
+                imageView.setColorFilter(Color.argb(150,200,200,200));
+            }
+            else
+            {
+                imageView.setColorFilter(null);
+            }
         }
 
         return convertView;

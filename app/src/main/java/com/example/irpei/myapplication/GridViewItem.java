@@ -14,13 +14,14 @@ public class GridViewItem {
     private boolean isDirectory;
     private Bitmap image;
     private boolean isSelected;
+    private int position;
 
-
-    public GridViewItem(String path, boolean isDirectory, Bitmap image, boolean isSelected) {
+    public GridViewItem(String path, boolean isDirectory, Bitmap image, boolean isSelected, int position) {
         this.path = path;
         this.isDirectory = isDirectory;
         this.image = image;
         this.isSelected = isSelected;
+        this.position = position;
     }
 
 
@@ -44,4 +45,5 @@ public class GridViewItem {
     {
         isSelected = s;
     }
+    public int getPosition() { return position;}
 }

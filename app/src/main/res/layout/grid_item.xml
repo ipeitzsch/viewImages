@@ -3,7 +3,8 @@
 <RelativeLayout
     android:layout_height="match_parent"
     android:layout_width="match_parent"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    >
     <ImageView android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="150dp"
@@ -11,5 +12,6 @@
         android:padding="5dp"
         android:paddingBottom="5dp">
     </ImageView>
+
 </RelativeLayout>
 

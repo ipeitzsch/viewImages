@@ -4,6 +4,7 @@ package com.example.irpei.myapplication;
 import android.app.Activity;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
@@ -30,59 +31,18 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
     List<GridViewItem> gridItems;
     List<String> toLoad;
     MyGridAdapter adp;
+    GridView gridView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Button but = (Button)findViewById(R.id.button);
+
 
 
         setContentView(R.layout.activity_main);
         toLoad = new ArrayList<>();
         setGridAdapter("/storage/self/primary/DCIM/Camera");
     }
-    public void buttonClick(View view)
-    {
 
-        for(String s: toLoad)
-        {
-            Bitmap image = BitmapHelper.decodeBitmapFromFile(s,
-                    50,
-                    50);
-            File f = new File(s);
-            FileOutputStream out = null;
-            try{
-
-                out = new FileOutputStream("/storage/self/primary/DCIM/Test" + f.getName());
-                image.compress(Bitmap.CompressFormat.PNG, 100, out);
-                MediaScannerConnection.scanFile(this, new String[]{"/storage/self/primary/DCIM/Test" + f.getName()}, null, null);
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-            finally {
-                if(out != null)
-                {
-                    try {
-                        out.close();
-                        for(int i = 0; i < gridItems.size(); i++)
-                        {
-                            RelativeLayout v = (RelativeLayout)(adp.getView(i, null, null));
-                            ViewGroup a = (ViewGroup)v;
-                            ImageView img = (ImageView)(a.getChildAt(0));
-                            img.setColorFilter(null);
-                        }
-                        System.out.println("Done");
-                    }
-                    catch (IOException e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-    }
     /**
      * This will create our GridViewItems and set the adapter
      *
@@ -95,7 +55,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
          adp = new MyGridAdapter(this, gridItems);
 
         // Set the grid adapter
-        GridView gridView = (GridView) findViewById(R.id.gridView);
+        gridView = (GridView) findViewById(R.id.gridView);
         gridView.setAdapter(adp);
 
         // Set the onClickListener
@@ -118,7 +78,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
             // Add the directories containing images or sub-directories
             if (file.isDirectory()
                     && file.listFiles(new ImageFileFilter()).length > 0) {
-                items.add(new GridViewItem(file.getAbsolutePath(), true, null, false));
+                items.add(new GridViewItem(file.getAbsolutePath(), true, null, false, i));
             }
             // Add the images
             else {
@@ -126,7 +86,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
                         50,
                         50);
 
-                items.add(new GridViewItem(file.getAbsolutePath(), false, image, false));
+                items.add(new GridViewItem(file.getAbsolutePath(), false, image, false, i));
             }
         }
 
@@ -151,33 +111,14 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
     public void
     onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
+
         if (gridItems.get(position).isDirectory()) {
             setGridAdapter(gridItems.get(position).getPath());
         }
         else {
             GridViewItem g = gridItems.get(position);
-            if(g.isSelected())
-            {
-                g.setSelected(false);
-                ViewGroup a = (ViewGroup)view;
-                ImageView i = (ImageView)(a.getChildAt(0));
-                i.setColorFilter(null);
-                if(toLoad.contains(g.getPath()))
-                {
-                    toLoad.remove(g.getPath());
-                }
-            }
-            else
-            {
-                g.setSelected(true);
-                toLoad.add(g.getPath());
-                System.out.println(g.getPath());
-                ViewGroup a = (ViewGroup)view;
-                ImageView i = (ImageView)(a.getChildAt(0));
-                i.setColorFilter(Color.argb(150,200,200,200));
-
-
-            }
+            g.setSelected(!g.isSelected());
+            adp.getView(position, view, null);
         }
 
     }
