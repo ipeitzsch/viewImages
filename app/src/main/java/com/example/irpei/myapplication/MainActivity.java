@@ -81,7 +81,6 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intent,"Select Picture"), 1);
-                gridView.invalidate();
             }
         });
 
@@ -137,7 +136,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
             // Add the directories containing images or sub-directories
             if (file.isDirectory()
                     && file.listFiles(new ImageFileFilter()).length > 0) {
-                items.add(new GridViewItem(file.getAbsolutePath(), true, null, false, i));
+                items.add(new GridViewItem(file.getAbsolutePath(), true, null, false));
             }
             // Add the images
             else {
@@ -145,7 +144,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
                         50,
                         50);
 
-                items.add(new GridViewItem(file.getAbsolutePath(), false, image, false, i));
+                items.add(new GridViewItem(file.getAbsolutePath(), false, image, false));
             }
         }
 
@@ -197,7 +196,9 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
                     String path = getPath(u);
                     File f = new File(path);
                     copy(f, new File("/storage/self/primary/DCIM/Camera/" + f.getName()));
-
+                    GridViewItem g = new GridViewItem("/storage/self/primary/DCIM/Camera/" + f.getName(), false, BitmapFactory.decodeFile("/storage/self/primary/DCIM/Camera/" + f.getName()), false);
+                    gridItems.add(g);
+                    adp.add(g);
                 }
             }
             //else if(data.getData() != null) // single picture

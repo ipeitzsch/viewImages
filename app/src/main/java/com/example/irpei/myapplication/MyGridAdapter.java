@@ -23,8 +23,8 @@ import java.util.List;
 
 public class MyGridAdapter extends BaseAdapter {
 
-    LayoutInflater inflater;
-    List<GridViewItem> items;
+    private LayoutInflater inflater;
+    private List<GridViewItem> items;
 
 
     public MyGridAdapter(Context context, List<GridViewItem> items) {
