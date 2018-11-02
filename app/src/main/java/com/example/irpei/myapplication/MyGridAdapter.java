@@ -32,7 +32,10 @@ public class MyGridAdapter extends BaseAdapter {
         inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
-
+    public void add(GridViewItem i)
+    {
+        items.add(i);
+    }
     @Override
     public int getCount() {
         return items.size();
@@ -62,6 +65,8 @@ public class MyGridAdapter extends BaseAdapter {
         ImageView imageView = (ImageView) convertView.findViewById(R.id.imageView);
         Bitmap image = items.get(position).getImage();
 
+        TextView date = (TextView) convertView.findViewById(R.id.date);
+        date.setText(getDate(items.get(position)));
 
 
         if (image != null){

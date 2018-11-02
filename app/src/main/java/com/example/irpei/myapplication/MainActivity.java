@@ -1,14 +1,29 @@
 package com.example.irpei.myapplication;
 
 
+import android.Manifest;
 import android.app.Activity;
 
+import android.content.ClipData;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -21,6 +36,7 @@ import android.widget.RelativeLayout;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,21 +44,65 @@ import java.util.List;
 
 public class MainActivity extends Activity implements AdapterView.OnItemClickListener {
 
-    List<GridViewItem> gridItems;
-    List<String> toLoad;
-    MyGridAdapter adp;
-    GridView gridView;
+    private List<GridViewItem> gridItems;
+    private List<String> toLoad;
+    private MyGridAdapter adp;
+    private GridView gridView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
-
         setContentView(R.layout.activity_main);
         toLoad = new ArrayList<>();
-        setGridAdapter("/storage/self/primary/DCIM/Camera");
-    }
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
 
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        1);
+
+        }
+        else
+        {
+            setGridAdapter("/storage/self/primary/DCIM/Camera");
+        }
+
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        Button imp = (Button)findViewById(R.id.button);
+        imp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(intent,"Select Picture"), 1);
+                gridView.invalidate();
+            }
+        });
+
+        Button delete = (Button)findViewById(R.id.delete);
+        delete.setOnClickListener((view) -> {
+                for(String f : toLoad)
+                {
+                    new File(f).delete();
+                }
+                MediaScannerConnection.scanFile(this, new String[] { Environment.getExternalStorageDirectory().toString() }, null, null);
+                toLoad = new ArrayList<>();
+                for(int i = 0; i < gridItems.size(); i++)
+                {
+                    GridViewItem g = gridItems.get(i);
+                    if(g.isSelected()) {
+                        g.setSelected(!g.isSelected());
+                        adp.getView(i, null, null);
+                    }
+                }
+        });
+    }
     /**
      * This will create our GridViewItems and set the adapter
      *
@@ -64,8 +124,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 
 
     /**
-     * Go through the specified directory, and create items to display in our
-     * GridView
+        @param directoryPath - directory we would like to make gridView using
      */
     private List<GridViewItem> createGridItems(String directoryPath) {
         List<GridViewItem> items = new ArrayList<GridViewItem>();
@@ -119,10 +178,65 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
             GridViewItem g = gridItems.get(position);
             g.setSelected(!g.isSelected());
             adp.getView(position, view, null);
+            toLoad.add(g.getPath());
         }
 
     }
 
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if(requestCode == 1 && resultCode == Activity.RESULT_OK)
+        {
+            if(data.getClipData() != null) // multiple pictures
+            {
+                for(int i = 0; i < data.getClipData().getItemCount(); i++)
+                {
+                    Uri u = data.getClipData().getItemAt(i).getUri();
+                    String path = getPath(u);
+                    File f = new File(path);
+                    copy(f, new File("/storage/self/primary/DCIM/Camera/" + f.getName()));
+
+                }
+            }
+            //else if(data.getData() != null) // single picture
+        }
+
+    }
+
+    public String getPath(Uri uri) {
+
+        String path = null;
+        String[] projection = { MediaStore.Files.FileColumns.DATA };
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+
+        if(cursor == null){
+            path = uri.getPath();
+        }
+        else{
+            cursor.moveToFirst();
+            int column_index = cursor.getColumnIndexOrThrow(projection[0]);
+            path = cursor.getString(column_index);
+            cursor.close();
+        }
+
+        return ((path == null || path.isEmpty()) ? (uri.getPath()) : path);
+    }
+
+    public void copy(File src, File dest)
+    {
+        Bitmap image = BitmapFactory.decodeFile(src.getAbsolutePath());
+
+        try {
+            FileOutputStream out = new FileOutputStream(dest.getAbsolutePath());
+            image.compress(Bitmap.CompressFormat.PNG, 100, out);
+            String path = dest.getAbsolutePath();
+            MediaScannerConnection.scanFile(this, new String[]{path}, null, null);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
     /**
      * This can be used to filter files.
      */
@@ -137,6 +251,27 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
                 return true;
             }
             return false;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    setGridAdapter("/storage/self/primary/DCIM/Camera");
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request.
         }
     }
 }
