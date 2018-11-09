@@ -95,5 +95,12 @@ public class MyGridAdapter extends BaseAdapter {
         }
         return "";
     }
+    public void remove(GridViewItem g)
+    {
+        if(items.contains(g))
+        {
+            items.remove(g);
+        }
+    }
 
 }

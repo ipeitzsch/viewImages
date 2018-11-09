@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -45,12 +46,13 @@ import java.util.List;
 public class MainActivity extends Activity implements AdapterView.OnItemClickListener {
 
     private List<GridViewItem> gridItems;
-    private List<String> toLoad;
+    private List<GridViewItem> toLoad;
     private MyGridAdapter adp;
     private GridView gridView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        System.out.println(Environment.getExternalStorageDirectory().toString());
         setContentView(R.layout.activity_main);
         toLoad = new ArrayList<>();
         if (ContextCompat.checkSelfPermission(this,
@@ -64,7 +66,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
         }
         else
         {
-            setGridAdapter("/storage/self/primary/DCIM/Camera");
+            setGridAdapter(Environment.getExternalStorageDirectory().toString() + "/DCIM/Camera");
         }
 
     }
@@ -86,11 +88,17 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 
         Button delete = (Button)findViewById(R.id.delete);
         delete.setOnClickListener((view) -> {
-                for(String f : toLoad)
-                {
-                    new File(f).delete();
-                }
-                MediaScannerConnection.scanFile(this, new String[] { Environment.getExternalStorageDirectory().toString() }, null, null);
+                String f = toLoad.get(0).getPath();
+                /*
+                    This is the part that does the deleting and updating
+                 */
+                adp.remove(toLoad.get(0)); //Removes item from adp's data
+                new File(f).delete();
+                sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(f)))); //Tells device about delete
+                adp.notifyDataSetChanged(); // This line updates the GridView
+                /*
+                    End of area that does deleting and updating
+                 */
                 toLoad = new ArrayList<>();
                 for(int i = 0; i < gridItems.size(); i++)
                 {
@@ -177,7 +185,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
             GridViewItem g = gridItems.get(position);
             g.setSelected(!g.isSelected());
             adp.getView(position, view, null);
-            toLoad.add(g.getPath());
+            toLoad.add(g);
         }
 
     }
@@ -195,8 +203,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
                     Uri u = data.getClipData().getItemAt(i).getUri();
                     String path = getPath(u);
                     File f = new File(path);
-                    copy(f, new File("/storage/self/primary/DCIM/Camera/" + f.getName()));
-                    GridViewItem g = new GridViewItem("/storage/self/primary/DCIM/Camera/" + f.getName(), false, BitmapFactory.decodeFile("/storage/self/primary/DCIM/Camera/" + f.getName()), false);
+                    copy(f, new File(Environment.getExternalStorageDirectory().toString() + "/DCIM/Camera/" + f.getName()));
+                    GridViewItem g = new GridViewItem(Environment.getExternalStorageDirectory().toString() + "/DCIM/Camera/"+ f.getName(), false, BitmapFactory.decodeFile(Environment.getExternalStorageDirectory().toString() + "/DCIM/Camera/" + f.getName()), false);
                     gridItems.add(g);
                     adp.add(g);
                 }
